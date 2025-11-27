@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sack of Constantinople - April 13, 1204</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-100">
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+
+        // SACK DATA - Regions, Scenarios, Scoring
+        const REGIONS = {
+          P: { name: "Petrion", desc: "District of churches and monasteries", color: "bg-amber-100" },
+          B: { name: "Blachernae", desc: "Imperial palace district", color: "bg-purple-100" },
+          G: { name: "Great Palace", desc: "Heart of Byzantine power", color: "bg-red-100" },
+          M: { name: "Merchant Quarter", desc: "Commercial district", color: "bg-blue-100" },
+          R: { name: "Residential Quarter", desc: "Wealthy neighborhoods", color: "bg-green-100" }
+        };
+
+        const CHARACTERS = [
+          { id: 1, name: 'Boniface of Montferrat' },
+          { id: 2, name: 'Enrico Dandolo' },
+          { id: 3, name: 'Baldwin of Flanders' },
+          { id: 4, name: 'Bishop Nivelons of Soissons' },
+          { id: 5, name: 'Robert of Clari' },
+          { id: 6, name: 'Louis of Blois' },
+          { id: 7, name: 'Angelo Falier' },
+          { id: 8, name: 'John Faicete of Acre' },
+          { id: 9, name: 'Hugh of Saint-Pol' },
+          { id: 10, name: 'Anna/Agnes of France' },
+          { id: 11, name: 'Oberto II of Biandrate' },
+          { id: 12, name: 'Martin of Parisis' },
+          { id: 13, name: 'Pantaleone Barbo' },
+          { id: 14, name: 'Theodore Branas' },
+          { id: 15, name: 'Geoffrey of Villehardouin' },
+          { id: 16, name: 'Berthold of Katzenellenbogen' },
+          { id: 17, name: 'Conrad of Halberstadt' },
+          { id: 18, name: 'Marino Zeno' },
+          { id: 19, name: 'Brother Barozzi' },
+          { id: 20, name: 'Henry of Flanders' },
+          { id: 21, name: 'Peter of Luciendo' },
+          { id: 22, name: 'Pietro Steno' },
+          { id: 23, name: 'Renier of Travele' },
+          { id: 24, name: 'Conon of Bethune' },
+          { id: 25, name: 'Raimbaut of Vaquiras' },
+          { id: 26, name: 'Garnier of Troyes' },
+          { id: 27, name: 'Marco Sanudo' },
+          { id: 28, name: 'Othon of La Roche' },
+          { id: 29, name: 'Peter of Amiens' },
+          { id: 30, name: 'William of Arles' },
+          { id: 31, name: 'Andrew Valero' },
+          { id: 32, name: 'Amedee Pofey' },
+          { id: 33, name: 'James of Avesnes' },
+          { id: 34, name: 'Marino Ballaresso' },
+          { id: 35, name: 'Peter of Bethlehem' },
+          { id: 36, name: 'Piere Vidal' },
+          { id: 37, name: 'Milo of Brebant' },
+          { id: 38, name: 'Raveno della Carceri' },
+          { id: 39, name: 'Andrea Balduino' },
+          { id: 40, name: 'Peter of Bracieux' },
+          { id: 41, name: 'Hugh of Saint-Ghislain' },
+          { id: 42, name: 'Andre of Ureboise' },
+          { id: 43, name: 'Guy of Pallavicini' },
+          { id: 44, name: 'Matteo Steno' },
+          { id: 45, name: 'Baldwin of Beauvoir' },
+          { id: 46, name: 'Walon of Dampierre' },
+          { id: 47, name: 'King Lalibela of Ethiopia' },
+          { id: 48, name: 'Walframe of Gemona' },
+          { id: 49, name: 'Eustace of Flanders' },
+          { id: 50, name: 'Warin of Douai' },
+          { id: 51, name: 'Henry of Ulmen' },
+          { id: 52, name: 'Domenico of Constantinople' }
+        ];
+
+        // SCENARIO DATA - Full definitions for each position
+        const SCENARIOS = {
+          "P1": {
+            region: "P",
+            position: 1,
+            title: "First Position - Petrion Region",
+            questions: [
+              {
+                text: "Being so near to so many famous churches and such fine, old dwellings, it's no surprise to you that the Petrion region has a number of fine little stores and shops. One crossroads has a dry goods store, a spice shop, a wine-shop, and a place where goods from the north are imported. Knowing you have time for only one before other Crusaders fall upon such an opportunity, you...",
+                choices: [
+                  { letter: "A", text: "Break the door in at the wine-shop, kill the owner, take the best wine", marks: 10, fama: -2, nefas: 2 },
+                  { letter: "B", text: "Open the dry goods store and distribute food and grain to local Greeks", marks: 0, fama: 3, nefas: -1 },
+                  { letter: "C", text: "Take every last bit of spice you can to resell at a later date for a better price", marks: 15, fama: 0, nefas: 0 },
+                  { letter: "D", text: "Enslave the owners of the northern importers, taking everything they own as profit", marks: 20, fama: -1, nefas: 3 }
+                ]
+              },
+              {
+                text: "The Petrion is full of landmarks, from the famous Petrion fortress guarding the sea walls to the great Church of the Holy Apostles, dedicated by Constantine himself, to the Monastery of Christ Pantocrator and the Convent of the Petrians. While deciding which way to go, you find a square where a market day must have been approaching. Seeing the stalls left unattended and wanting for loot, you...",
+                choices: [
+                  { letter: "A", text: "Operate as many shops as you can, selling to Greeks and Crusaders alike, for a good price", marks: 12, fama: 1, nefas: 0 },
+                  { letter: "B", text: "Take every icon you can find in all of the shops, since the Greeks don't use them properly", marks: 8, fama: 2, nefas: 1 },
+                  { letter: "C", text: "Gather as many of the shop's debris together and start a nice bonfire", marks: 0, fama: -3, nefas: 2 },
+                  { letter: "D", text: "Search every shop for a strong box or a coin-purse, liberating them each from the stalls", marks: 18, fama: 0, nefas: 1 }
+                ]
+              },
+              {
+                text: "You spy an old man outside the Pantocrator monastery, who appears to be carrying things out of the monastery. Retracing his steps, you find yourself in an interior part of the monastery. Winding through corridors and up some staircases, you arrive at what must be the abbot's chamber. The abbot, by the size and luxury of the room, was a very wealthy man. The bed is enormous, the desk is made of ebony, with inlaid mosaics on the writing surface. You search the room, and identify a number of pieces, but, with so little time remaining before the light of day is gone, you can only take one piece with you. You...",
+                choices: [
+                  { letter: "A", text: "Take the abbot's personal icon of Christ Pantocrator", marks: 5, fama: 2, nefas: 1 },
+                  { letter: "B", text: "Take the large tiger's pelt rug", marks: 15, fama: 0, nefas: 0 },
+                  { letter: "C", text: "Take the abbot's staff", marks: 8, fama: 1, nefas: 0 },
+                  { letter: "D", text: "Take the abbot's personal crucifix", marks: 10, fama: 3, nefas: 2 }
+                ]
+              }
+            ]
+          },
+          "P2": {
+            region: "P",
+            position: 2,
+            title: "Second Position - Petrion Region",
+            questions: [
+              {
+                text: "Being so near to so many famous churches and such fine, old dwellings, it's no surprise to you that the Petrion region has a number of fine little stores and shops. One corner has a dry goods store, a spice shop, a wine-shop, and a place where goods from the north are imported. Knowing you have time for only one before other Crusaders fall upon such an opportunity, you...",
+                choices: [
+                  { letter: "A", text: "Break the door in at the wine-shop, kill the owner, take the best wine", marks: 10, fama: -2, nefas: 2 },
+                  { letter: "B", text: "Open the dry goods store and distribute food and grain to local Greeks", marks: 0, fama: 3, nefas: -1 },
+                  { letter: "C", text: "Take every last bit of spice you can to resell at a later date for a better price", marks: 15, fama: 0, nefas: 0 },
+                  { letter: "D", text: "Enslave the owners of the northern importers, taking everything they own as profit", marks: 20, fama: -1, nefas: 3 }
+                ]
+              },
+              {
+                text: "The Petrion is full of landmarks, from the fortress to the Holy Apostles to the Monastery of the Petrians. While deciding which way to go, you find a square where a market day must have been approaching. Seeing the stalls left unattended and wanting for loot, you...",
+                choices: [
+                  { letter: "A", text: "Operate as many shops as you can, selling to Greeks and Crusaders alike, for a good price", marks: 12, fama: 1, nefas: 0 },
+                  { letter: "B", text: "Take every icon you can find in all of the shops, since the Greeks don't use them properly", marks: 8, fama: 2, nefas: 1 },
+                  { letter: "C", text: "Gather as many of the shop's debris together and start a nice bonfire", marks: 0, fama: -3, nefas: 2 },
+                  { letter: "D", text: "Search every shop for a strong box or a coin-purse, liberating them each from the stalls", marks: 18, fama: 0, nefas: 1 }
+                ]
+              },
+              {
+                text: "A youngish-looking soldier, with his arms full of sparkling plates and a wine jug hurries out from the Petrion Fortress. You track back the trail of forks and spoons to the dining hall, where a door in the corner is wide open. You follow the hallway down. Below the dining hall, you find an incredibly deep staircase, which leads to a series of passages. You take one hallway, intrigued to see where this whole adventure leads. The corridors run to a large underground cavern. The cavern has high decorated floors, wide mosaic-covered walls, and noble gilt columns and is lit by torches, which reveal an enormous lake underneath the fortress. You...",
+                choices: [
+                  { letter: "A", text: "Steal the decorations", marks: 12, fama: 0, nefas: 1 },
+                  { letter: "B", text: "Swim in the big underground lake", marks: 0, fama: -1, nefas: 0 },
+                  { letter: "C", text: "Find a deputy to charge Greeks for the water", marks: 20, fama: -2, nefas: 2 },
+                  { letter: "D", text: "Search the landing for any other hidden passages or treasures", marks: 25, fama: 1, nefas: 0 }
+                ]
+              }
+            ]
+          },
+          // Additional scenarios would continue here...
+          // For demonstration, I'll add one more complete scenario
+          "P3": {
+            region: "P",
+            position: 3,
+            title: "Third Position - Petrion Region",
+            questions: [
+              {
+                text: "Being so near to so many famous churches and such fine, old dwellings, it's no surprise to you that the Petrion region has a number of fine little stores and shops. One corner has a dry goods store, a spice shop, a wine-shop, and a place where goods from the north are imported. Knowing you have time for only one before other Crusaders fall upon such an opportunity, you...",
+                choices: [
+                  { letter: "A", text: "Break the door in at the wine-shop, kill the owner, take the best wine", marks: 10, fama: -2, nefas: 2 },
+                  { letter: "B", text: "Open the dry goods store and distribute food and grain to local Greeks", marks: 0, fama: 3, nefas: -1 },
+                  { letter: "C", text: "Take every last bit of spice you can to resell at a later date for a better price", marks: 15, fama: 0, nefas: 0 },
+                  { letter: "D", text: "Enslave the owners of the northern importers, taking everything they own as profit", marks: 20, fama: -1, nefas: 3 }
+                ]
+              },
+              {
+                text: "The Petrion is full of landmarks, from the fortress to the Holy Apostles to the Monastery of the Petrians. While deciding which way to go, you find a square where a market day must have been approaching. Seeing the stalls left unattended and wanting for loot, you...",
+                choices: [
+                  { letter: "A", text: "Operate as many shops as you can, selling to Greeks and Crusaders alike, for a good price", marks: 12, fama: 1, nefas: 0 },
+                  { letter: "B", text: "Take every icon you can find in all of the shops, since the Greeks don't use them properly", marks: 8, fama: 2, nefas: 1 },
+                  { letter: "C", text: "Gather as many of the shop's debris together and start a nice bonfire", marks: 0, fama: -3, nefas: 2 },
+                  { letter: "D", text: "Search every shop for a strong box or a coin-purse, liberating them each from the stalls", marks: 18, fama: 0, nefas: 1 }
+                ]
+              },
+              {
+                text: "You find the largest church in the region, the famous Church of the Holy Apostles, with its glorious main chapel inside. You make your way to the interior of the church, where you spy the glittering high altar. On your way to high altar, you spy a series of tombs to the side. When you inspect them carefully, you discover that, here in the Church of the Holy Apostles, are the tombs of some of the great emperors. You find the tomb of Constantine himself, that first Christian emperor of legend. You...",
+                choices: [
+                  { letter: "A", text: "Stop to pray that such a holy man will bless your name before God Almighty", marks: 0, fama: 2, nefas: -1 },
+                  { letter: "B", text: "Open the tomb and take Constantine's Relics for your own", marks: 15, fama: 5, nefas: 3 },
+                  { letter: "C", text: "Open the tomb and look for any of his personal effects", marks: 30, fama: 0, nefas: 2 },
+                  { letter: "D", text: "Sell the location of Constantine's tomb to other Crusaders", marks: 10, fama: -2, nefas: 1 }
+                ]
+              }
+            ]
+          }
+        };
+
+        const SackModule = () => {
+            const [screen, setScreen] = useState('welcome');
+            const [characterId, setCharacterId] = useState(null);
+            const [scenarioCode, setScenarioCode] = useState('');
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [choices, setChoices] = useState([]);
+            const [character, setCharacter] = useState(null);
+            const [scenario, setScenario] = useState(null);
+            
+            const startSack = () => {
+                if (!characterId || !scenarioCode) {
+                    alert('Please select your character and enter your scenario code!');
+                    return;
+                }
+                
+                const char = CHARACTERS.find(c => c.id === parseInt(characterId));
+                const scen = SCENARIOS[scenarioCode.toUpperCase()];
+                
+                if (!char) {
+                    alert('Invalid character selection!');
+                    return;
+                }
+                
+                if (!scen) {
+                    alert(`Scenario code "${scenarioCode}" not found! Available: P1, P2, P3 (more coming soon)`);
+                    return;
+                }
+                
+                setCharacter(char);
+                setScenario(scen);
+                setChoices([]);
+                setCurrentQuestion(0);
+                setScreen('question');
+            };
+            
+            const makeChoice = (choiceLetter) => {
+                const newChoices = [...choices, choiceLetter];
+                setChoices(newChoices);
+                
+                if (currentQuestion < 2) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else {
+                    // Generate result code
+                    const charIdPadded = character.id.toString().padStart(2, '0');
+                    const code = `${charIdPadded}${scenarioCode.toUpperCase()}${newChoices.join('')}`;
+                    
+                    // Calculate results
+                    let totalMarks = 0;
+                    let totalFama = 0;
+                    let totalNefas = 0;
+                    
+                    newChoices.forEach((letter, qIndex) => {
+                        const choice = scenario.questions[qIndex].choices.find(c => c.letter === letter);
+                        totalMarks += choice.marks;
+                        totalFama += choice.fama;
+                        totalNefas += choice.nefas;
+                    });
+                    
+                    setScreen('results');
+                }
+            };
+            
+            const calculateResults = () => {
+                let totalMarks = 0;
+                let totalFama = 0;
+                let totalNefas = 0;
+                
+                choices.forEach((letter, qIndex) => {
+                    const choice = scenario.questions[qIndex].choices.find(c => c.letter === letter);
+                    totalMarks += choice.marks;
+                    totalFama += choice.fama;
+                    totalNefas += choice.nefas;
+                });
+                
+                return { totalMarks, totalFama, totalNefas };
+            };
+            
+            const generateCode = () => {
+                const charIdPadded = character.id.toString().padStart(2, '0');
+                return `${charIdPadded}${scenarioCode.toUpperCase()}${choices.join('')}`;
+            };
+
+            // WELCOME SCREEN
+            if (screen === 'welcome') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-b from-red-900 via-red-800 to-amber-900 text-white p-6">
+                        <div className="max-w-3xl mx-auto">
+                            <div className="text-center mb-12 pt-8">
+                                <h1 className="text-5xl font-bold mb-4 text-amber-200">
+                                    ⚔️ The Sack of Constantinople ⚔️
+                                </h1>
+                                <p className="text-2xl text-amber-100 mb-2">April 13, 1204</p>
+                                <p className="text-lg text-gray-200 italic">
+                                    "For they who were once strangers are now citizens of the Queen of Cities"
+                                </p>
+                            </div>
+
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-6">
+                                <h2 className="text-2xl font-bold mb-4 text-amber-200">Instructions</h2>
+                                <ol className="space-y-3 text-lg">
+                                    <li>1. Select your character from the dropdown</li>
+                                    <li>2. Enter your scenario code (assigned by instructor)</li>
+                                    <li>3. Answer three questions about your actions</li>
+                                    <li>4. Receive your result code to submit</li>
+                                </ol>
+                            </div>
+
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8">
+                                <div className="mb-6">
+                                    <label className="block text-xl font-bold mb-3 text-amber-200">
+                                        Select Your Character:
+                                    </label>
+                                    <select 
+                                        className="w-full p-4 text-lg bg-white text-gray-900 rounded border-2 border-amber-600"
+                                        value={characterId || ''}
+                                        onChange={(e) => setCharacterId(e.target.value)}
+                                    >
+                                        <option value="">-- Choose Character --</option>
+                                        {CHARACTERS.map(char => (
+                                            <option key={char.id} value={char.id}>
+                                                {char.id}. {char.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="mb-6">
+                                    <label className="block text-xl font-bold mb-3 text-amber-200">
+                                        Enter Scenario Code:
+                                    </label>
+                                    <input 
+                                        type="text"
+                                        placeholder="e.g., P1, B3, G2, M4, R6"
+                                        className="w-full p-4 text-lg bg-white text-gray-900 rounded border-2 border-amber-600 uppercase"
+                                        value={scenarioCode}
+                                        onChange={(e) => setScenarioCode(e.target.value.toUpperCase())}
+                                        maxLength={2}
+                                    />
+                                    <p className="text-sm text-gray-300 mt-2">
+                                        Available scenarios: P1, P2, P3 (Petrion region - more regions coming soon)
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={startSack}
+                                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-8 rounded text-xl transition-colors"
+                                >
+                                    Begin the Sack →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // QUESTION SCREEN
+            if (screen === 'question') {
+                const question = scenario.questions[currentQuestion];
+                const regionInfo = REGIONS[scenario.region];
+                
+                return (
+                    <div className="min-h-screen bg-gradient-to-b from-stone-800 to-stone-900 text-white p-6">
+                        <div className="max-w-4xl mx-auto">
+                            {/* Header */}
+                            <div className="text-center mb-8">
+                                <h1 className="text-3xl font-bold text-amber-200 mb-2">
+                                    {character.name}
+                                </h1>
+                                <div className={`inline-block ${regionInfo.color} text-gray-900 px-6 py-2 rounded-full font-bold`}>
+                                    {regionInfo.name} - Position {scenario.position}
+                                </div>
+                            </div>
+
+                            {/* Progress */}
+                            <div className="mb-8">
+                                <div className="flex justify-between mb-2">
+                                    <span className="text-sm text-gray-400">Progress</span>
+                                    <span className="text-sm text-amber-300 font-bold">
+                                        Question {currentQuestion + 1} of 3
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-700 rounded-full h-3">
+                                    <div 
+                                        className="bg-amber-500 h-3 rounded-full transition-all duration-500"
+                                        style={{width: `${((currentQuestion + 1) / 3) * 100}%`}}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Question */}
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-6">
+                                <h2 className="text-xl font-bold mb-4 text-amber-200">
+                                    Question {currentQuestion + 1}:
+                                </h2>
+                                <p className="text-lg leading-relaxed text-gray-200">
+                                    {question.text}
+                                </p>
+                            </div>
+
+                            {/* Choices */}
+                            <div className="space-y-4">
+                                {question.choices.map(choice => (
+                                    <button
+                                        key={choice.letter}
+                                        onClick={() => makeChoice(choice.letter)}
+                                        className="w-full bg-white/5 hover:bg-amber-600/30 border-2 border-white/20 hover:border-amber-500 rounded-lg p-6 text-left transition-all group"
+                                    >
+                                        <div className="flex items-start">
+                                            <span className="text-2xl font-bold text-amber-400 mr-4 group-hover:text-amber-300">
+                                                {choice.letter})
+                                            </span>
+                                            <p className="text-lg text-gray-200 group-hover:text-white">
+                                                {choice.text}
+                                            </p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // RESULTS SCREEN
+            if (screen === 'results') {
+                const results = calculateResults();
+                const resultCode = generateCode();
+                
+                return (
+                    <div className="min-h-screen bg-gradient-to-b from-green-900 via-emerald-800 to-teal-900 text-white p-6">
+                        <div className="max-w-3xl mx-auto">
+                            <div className="text-center mb-8 pt-8">
+                                <h1 className="text-4xl font-bold mb-4 text-amber-200">
+                                    Sack Complete!
+                                </h1>
+                                <p className="text-xl text-gray-200">
+                                    {character.name}'s Actions Have Been Recorded
+                                </p>
+                            </div>
+
+                            {/* Result Code - CRITICAL */}
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-6 border-4 border-amber-500">
+                                <h2 className="text-2xl font-bold mb-4 text-amber-200 text-center">
+                                    📜 Your Result Code 📜
+                                </h2>
+                                <div className="bg-gray-900 rounded-lg p-6 text-center mb-4">
+                                    <code className="text-5xl font-bold text-amber-400 tracking-widest">
+                                        {resultCode}
+                                    </code>
+                                </div>
+                                <p className="text-center text-lg text-gray-200 mb-4">
+                                    <strong className="text-amber-300">IMPORTANT:</strong> Copy this code and submit it to your instructor
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(resultCode);
+                                        alert('Code copied to clipboard!');
+                                    }}
+                                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded text-lg"
+                                >
+                                    📋 Copy Code to Clipboard
+                                </button>
+                            </div>
+
+                            {/* Preview Results */}
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-6">
+                                <h2 className="text-2xl font-bold mb-4 text-amber-200">Your Plunder:</h2>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div className="bg-yellow-600/20 rounded-lg p-4">
+                                        <div className="text-4xl mb-2">💰</div>
+                                        <div className="text-3xl font-bold text-yellow-300">{results.totalMarks}</div>
+                                        <div className="text-sm text-gray-300">Marks of Silver</div>
+                                    </div>
+                                    <div className="bg-blue-600/20 rounded-lg p-4">
+                                        <div className="text-4xl mb-2">⭐</div>
+                                        <div className="text-3xl font-bold text-blue-300">
+                                            {results.totalFama > 0 ? '+' : ''}{results.totalFama}
+                                        </div>
+                                        <div className="text-sm text-gray-300">Fama</div>
+                                    </div>
+                                    <div className="bg-red-600/20 rounded-lg p-4">
+                                        <div className="text-4xl mb-2">⚠️</div>
+                                        <div className="text-3xl font-bold text-red-300">
+                                            {results.totalNefas > 0 ? '+' : ''}{results.totalNefas}
+                                        </div>
+                                        <div className="text-sm text-gray-300">Nefas</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Your Choices */}
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-6">
+                                <h2 className="text-2xl font-bold mb-4 text-amber-200">Your Choices:</h2>
+                                <div className="space-y-4">
+                                    {choices.map((letter, idx) => {
+                                        const choice = scenario.questions[idx].choices.find(c => c.letter === letter);
+                                        return (
+                                            <div key={idx} className="border-l-4 border-amber-500 pl-4">
+                                                <div className="font-bold text-amber-300">Question {idx + 1}: Choice {letter}</div>
+                                                <div className="text-gray-300">{choice.text}</div>
+                                                <div className="text-sm text-gray-400 mt-1">
+                                                    +{choice.marks} marks, {choice.fama > 0 ? '+' : ''}{choice.fama} fama, {choice.nefas > 0 ? '+' : ''}{choice.nefas} nefas
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setScreen('welcome');
+                                    setCharacterId(null);
+                                    setScenarioCode('');
+                                    setChoices([]);
+                                }}
+                                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded text-lg"
+                            >
+                                ← Start New Sack
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+        };
+
+        ReactDOM.render(<SackModule />, document.getElementById('root'));
+    </script>
+</body>
+</html>
